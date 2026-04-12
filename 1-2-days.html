@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend System Design — Day 1 & Day 2 Notes</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #111118;
+            --bg3: #1a1a24;
+            --border: #2a2a3a;
+            --accent: #7c6aff;
+            --accent2: #ff6a6a;
+            --accent3: #6affd4;
+            --accent4: #ffd96a;
+            --text: #e8e8f0;
+            --text-muted: #888899;
+            --correct: #4ade80;
+            --wrong: #f87171;
+            --partial: #fbbf24;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        /* HEADER */
+        .hero {
+            background: linear-gradient(135deg, #0a0a0f 0%, #12101f 50%, #0a0f1f 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 60px 40px 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px; right: -100px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(124,106,255,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -80px; left: 100px;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(106,255,212,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(124,106,255,0.15);
+            border: 1px solid rgba(124,106,255,0.4);
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(28px, 5vw, 52px);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(90deg, var(--accent), var(--accent3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 16px;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
+
+        .progress-bar-wrap {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .week-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .week-chip .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+        }
+
+        /* LAYOUT */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        /* DAY SECTION */
+        .day-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 56px 0 32px;
+        }
+
+        .day-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--bg);
+            background: var(--accent);
+            padding: 6px 14px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        .day-num.day2 { background: var(--accent3); color: #0a0a0f; }
+
+        .day-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            font-size: 18px;
+        }
+
+        /* STRATEGY GRID */
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .strategy-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .strategy-card .stag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .csr .stag  { background: rgba(124,106,255,0.2); color: var(--accent); }
+        .ssr .stag  { background: rgba(255,106,106,0.2); color: var(--accent2); }
+        .ssg .stag  { background: rgba(106,255,212,0.2); color: var(--accent3); }
+        .isr .stag  { background: rgba(255,217,106,0.2); color: var(--accent4); }
+
+        .strategy-card h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .strategy-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .pros-cons { font-size: 12px; line-height: 1.8; }
+        .pros-cons .pro { color: var(--correct); }
+        .pros-cons .con { color: var(--wrong); }
+
+        /* CODE BLOCK */
+        .code-block {
+            background: #0d0d16;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 16px 0;
+            white-space: pre;
+        }
+
+        .code-block .c  { color: #4a4a6a; }
+        .code-block .k  { color: var(--accent); }
+        .code-block .s  { color: var(--accent3); }
+        .code-block .v  { color: var(--accent4); }
+        .code-block .t  { color: var(--accent2); }
+        .code-block .ok { color: var(--correct); }
+        .code-block .no { color: var(--wrong); }
+
+        /* DECISION TREE */
+        .tree {
+            background: #0d0d16;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 2;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            margin: 16px 0;
+        }
+
+        th {
+            background: var(--bg3);
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(42,42,58,0.5);
+            vertical-align: top;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .tag-correct { color: var(--correct); font-weight: 600; }
+        .tag-wrong   { color: var(--wrong); font-weight: 600; }
+        .tag-partial { color: var(--partial); font-weight: 600; }
+
+        /* HIGHLIGHT BOX */
+        .highlight {
+            border-left: 3px solid var(--accent);
+            background: rgba(124,106,255,0.06);
+            border-radius: 0 8px 8px 0;
+            padding: 14px 18px;
+            font-size: 14px;
+            font-style: italic;
+            color: #c0c0d8;
+            margin: 16px 0;
+        }
+
+        .highlight.green  { border-color: var(--correct); background: rgba(74,222,128,0.05); color: #a8f0c0; }
+        .highlight.red    { border-color: var(--accent2); background: rgba(255,106,106,0.05); color: #f0a8a8; }
+        .highlight.yellow { border-color: var(--accent4); background: rgba(255,217,106,0.05); color: #f0e0a8; }
+
+        /* STATE GRID */
+        .state-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .state-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .state-card .stag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .local .stag   { background: rgba(124,106,255,0.2); color: var(--accent); }
+        .server .stag  { background: rgba(106,255,212,0.2); color: var(--accent3); }
+        .url .stag     { background: rgba(255,217,106,0.2); color: var(--accent4); }
+        .global .stag  { background: rgba(255,106,106,0.2); color: var(--accent2); }
+
+        .state-card h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .state-card p { font-size: 12.5px; color: var(--text-muted); margin-bottom: 6px; }
+
+        /* PRACTICE SECTION */
+        .practice-wrap {
+            border: 1px solid rgba(124,106,255,0.3);
+            background: rgba(124,106,255,0.04);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .practice-wrap h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qa-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .qa-box {
+            background: var(--bg3);
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 13px;
+        }
+
+        .qa-box .label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        /* DIVIDER */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 40px 0;
+        }
+
+        /* FRAMEWORK BOX */
+        .framework-box {
+            background: linear-gradient(135deg, rgba(124,106,255,0.08), rgba(106,255,212,0.05));
+            border: 1px solid rgba(124,106,255,0.3);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+
+        .framework-box h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .step-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .step-num {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: rgba(124,106,255,0.2);
+            border: 1px solid rgba(124,106,255,0.4);
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .step-content h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+        .step-content p  { font-size: 12.5px; color: var(--text-muted); }
+
+        /* SUMMARY BOX */
+        .summary-box {
+            background: linear-gradient(135deg, #111118, #12101f);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            margin-top: 48px;
+        }
+
+        .summary-box h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(42,42,58,0.5);
+            font-size: 14px;
+        }
+
+        .progress-row:last-child { border-bottom: none; }
+
+        .status-icon { font-size: 16px; width: 20px; }
+
+        @media (max-width: 600px) {
+            .strategy-grid, .state-grid, .qa-row { grid-template-columns: 1fr; }
+            .hero { padding: 40px 20px 36px; }
+            .container { padding: 0 16px 60px; }
+            .code-block, .tree { font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="badge">Staff Frontend Engineer Prep</div>
+    <h1>Frontend System Design<br><span>Day 1 & Day 2 Notes</span></h1>
+    <p>Everything covered in your first two sessions — rendering strategies, state management, and all practice examples with full explanations.</p>
+    <div class="progress-bar-wrap">
+        <div class="week-chip">
+            <div class="dot" style="background:var(--accent)"></div>
+            Week 1 · Day 1 — Rendering Strategies
+        </div>
+        <div class="week-chip">
+            <div class="dot" style="background:var(--accent3)"></div>
+            Week 1 · Day 2 — State Management
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ==================== DAY 1 ==================== -->
+    <div class="day-header">
+        <div class="day-num">Day 1</div>
+        <h2>Rendering Strategies</h2>
+    </div>
+
+    <!-- WHY IT MATTERS -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🎯</span> Why This Matters in Interviews</div>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:12px;">
+            One of the first decisions in any system design is: <em>where and when does HTML get generated?</em>
+            This affects SEO, performance, scalability, and UX. Interviewers ask it early to test architecture thinking.
+        </p>
+        <div class="highlight">
+            The key is not just naming the strategy — it's defending it with trade-offs.
+        </div>
+    </div>
+
+    <!-- 3 QUESTIONS -->
+    <div class="card">
+        <div class="card-title"><span class="icon">❓</span> The 3 Questions — Ask These Before Every Answer</div>
+        <div class="code-block"><span class="ok">1. Is this behind a login?</span>
+            YES → SEO irrelevant → CSR
+
+            <span class="ok">2. Is this public and SEO critical?</span>
+            YES → ask next question
+
+            <span class="ok">3. How often does content change?</span>
+            Never / rarely      → SSG
+            Daily / hourly      → ISR
+            Per user / real-time → SSR</div>
+        <div class="highlight yellow">⚠️ Always ask question 1 first. Skipping it is the most common mistake.</div>
+    </div>
+
+    <!-- 4 STRATEGIES -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🗺️</span> The 4 Rendering Strategies</div>
+        <div class="strategy-grid">
+            <div class="strategy-card csr">
+                <div class="stag">CSR</div>
+                <h4>Client Side Rendering</h4>
+                <p>Server sends empty HTML + JS. Browser runs JS and builds the page.</p>
+                <p style="font-size:12px; color:#888; margin-bottom:8px;"><strong>Example:</strong> Gmail, Slack, Dashboards behind login</p>
+                <div class="pros-cons">
+                    <div class="pro">✅ Rich interactions</div>
+                    <div class="pro">✅ Cheap to host</div>
+                    <div class="con">❌ Blank screen until JS runs</div>
+                    <div class="con">❌ Bad SEO</div>
+                </div>
+            </div>
+            <div class="strategy-card ssr">
+                <div class="stag">SSR</div>
+                <h4>Server Side Rendering</h4>
+                <p>Server builds full HTML per request, sends to browser.</p>
+                <p style="font-size:12px; color:#888; margin-bottom:8px;"><strong>Example:</strong> LinkedIn profiles, public user pages</p>
+                <div class="pros-cons">
+                    <div class="pro">✅ Great SEO</div>
+                    <div class="pro">✅ Fast First Paint</div>
+                    <div class="con">❌ Slower TTFB</div>
+                    <div class="con">❌ Higher server cost</div>
+                </div>
+            </div>
+            <div class="strategy-card ssg">
+                <div class="stag">SSG</div>
+                <h4>Static Site Generation</h4>
+                <p>All pages pre-built at build time and deployed to CDN.</p>
+                <p style="font-size:12px; color:#888; margin-bottom:8px;"><strong>Example:</strong> Blogs, docs, marketing sites</p>
+                <div class="pros-cons">
+                    <div class="pro">✅ Blazing fast (CDN)</div>
+                    <div class="pro">✅ Cheapest to scale</div>
+                    <div class="con">❌ Data goes stale</div>
+                    <div class="con">❌ Slow builds at scale</div>
+                </div>
+            </div>
+            <div class="strategy-card isr">
+                <div class="stag">ISR</div>
+                <h4>Incremental Static Regen.</h4>
+                <p>SSG pages with a revalidation window — rebuilt in the background.</p>
+                <p style="font-size:12px; color:#888; margin-bottom:8px;"><strong>Example:</strong> E-commerce, news articles</p>
+                <div class="pros-cons">
+                    <div class="pro">✅ Fast like SSG</div>
+                    <div class="pro">✅ Data stays fresh</div>
+                    <div class="con">❌ Slightly stale</div>
+                    <div class="con">❌ More complex</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DECISION MAP -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🧭</span> Decision Map</div>
+        <div class="tree"><span style="color:var(--accent4)">Is SEO critical?</span>
+            ├── <span style="color:var(--wrong)">NO</span>  → CSR <span style="color:var(--text-muted)">(dashboards, apps behind login)</span>
+            └── <span style="color:var(--correct)">YES</span> → <span style="color:var(--accent4)">Does content change frequently?</span>
+            ├── <span style="color:var(--wrong)">NO</span>  → SSG <span style="color:var(--text-muted)">(blogs, docs, marketing)</span>
+            └── <span style="color:var(--correct)">YES</span> → <span style="color:var(--accent4)">Is it personalized per user?</span>
+            ├── <span style="color:var(--correct)">YES</span> → SSR <span style="color:var(--text-muted)">(social feeds, profiles)</span>
+            └── <span style="color:var(--wrong)">NO</span>  → ISR <span style="color:var(--text-muted)">(product pages, news)</span></div>
+    </div>
+
+    <!-- WEAK vs STRONG ANSWER -->
+    <div class="card">
+        <div class="card-title"><span class="icon">💬</span> Weak vs Strong Interview Answer</div>
+        <div class="highlight red">❌ Weak: "I'd use SSR for this."</div>
+        <div class="highlight green">✅ Strong: "Since this is a public product page that needs SEO and the content changes maybe once a day, I'd go with ISR — CDN-level performance with a 60-second revalidation window. If the product had real-time inventory, I'd layer in a client-side fetch just for that piece."</div>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:12px;">Formula: <strong style="color:var(--text)">Decision + Reason + Trade-off + Edge case awareness</strong></p>
+    </div>
+
+    <!-- PRACTICE EXAMPLES DAY 1 -->
+    <div class="practice-wrap">
+        <h3>🧪 All Practice Examples — Day 1</h3>
+
+        <table>
+            <thead>
+            <tr><th>App / Surface</th><th>Correct Answer</th><th>Key Reasoning</th></tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Banking Dashboard</td>
+                <td><span class="tag-correct">CSR</span></td>
+                <td>Behind login → no SEO. Highly interactive. Client fetch with React Query.</td>
+            </tr>
+            <tr>
+                <td>News Homepage</td>
+                <td><span class="tag-correct">ISR</span></td>
+                <td>Public + SEO. Changes frequently (hourly) but not real-time. 60s revalidation.</td>
+            </tr>
+            <tr>
+                <td>LinkedIn Profile</td>
+                <td><span class="tag-correct">SSR</span></td>
+                <td>Public, SEO-critical. Personalized per user so ISR/SSG won't work.</td>
+            </tr>
+            <tr>
+                <td>Shopify Product Page</td>
+                <td><span class="tag-correct">ISR</span></td>
+                <td>Public + SEO. Prices change daily not every second. Add client fetch for live stock.</td>
+            </tr>
+            <tr>
+                <td>Slack Workspace</td>
+                <td><span class="tag-correct">CSR</span></td>
+                <td>Behind auth. Real-time via WebSockets. Fully interactive.</td>
+            </tr>
+            <tr>
+                <td>Twitter Home Feed</td>
+                <td><span class="tag-correct">CSR</span></td>
+                <td>Behind login → no SEO. Real-time personalized feed.</td>
+            </tr>
+            <tr>
+                <td>Twitter Public Profile</td>
+                <td><span class="tag-correct">SSR</span></td>
+                <td>Publicly indexed. Personalized per user, can't use ISR.</td>
+            </tr>
+            <tr>
+                <td>Twitter Public Tweet Page</td>
+                <td><span class="tag-correct">SSR</span></td>
+                <td>SEO-critical. Indexed by Google. Content is user-specific.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight yellow">⭐ Key insight: Some apps have MULTIPLE surfaces with different strategies. Split the problem. Twitter uses CSR for the feed AND SSR for public pages.</div>
+    </div>
+
+    <!-- GOOGLE AUTOCOMPLETE -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🔍</span> Case Study — Google Autocomplete</div>
+
+        <div class="framework-box">
+            <h3>The 6-Step Framework Applied</h3>
+            <div class="step-row">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <h4>Clarify Requirements</h4>
+                    <p>Standalone component, 5–8 suggestions, keyboard navigation required, Google scale</p>
+                </div>
+            </div>
+            <div class="step-row">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <h4>Architecture</h4>
+                    <p>Search page = SSG (static, SEO critical). Suggestions = pure CSR — browser fires API calls as user types. NOT SSR.</p>
+                </div>
+            </div>
+            <div class="step-row">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <h4>Component Breakdown (Headless Pattern)</h4>
+                    <p>SearchPage (owns logic) → Autocomplete (dumb, generic) → SearchInput + SuggestionList → SuggestionItem</p>
+                </div>
+            </div>
+            <div class="step-row">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                    <h4>State — All Local (nothing global)</h4>
+                    <p>query, suggestions, isLoading, activeIndex. No other component needs this data.</p>
+                </div>
+            </div>
+            <div class="step-row">
+                <div class="step-num">5</div>
+                <div class="step-content">
+                    <h4>Performance</h4>
+                    <p>Debounce (300ms) reduces API calls. AbortController fixes race conditions.</p>
+                </div>
+            </div>
+            <div class="step-row">
+                <div class="step-num">6</div>
+                <div class="step-content">
+                    <h4>Accessibility</h4>
+                    <p>role="combobox", aria-expanded, aria-activedescendant, role="listbox", keyboard nav (arrow/enter/escape)</p>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;"><strong style="color:var(--text)">State design:</strong></p>
+        <div class="code-block"><span class="k">const</span> [query,       setQuery]       = <span class="t">useState</span>(<span class="s">""</span>)
+            <span class="k">const</span> [suggestions, setSuggestions] = <span class="t">useState</span>([])
+            <span class="k">const</span> [isLoading,   setIsLoading]   = <span class="t">useState</span>(<span class="v">false</span>)
+            <span class="k">const</span> [activeIndex, setActiveIndex] = <span class="t">useState</span>(<span class="v">-1</span>)</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin: 16px 0 8px;"><strong style="color:var(--text)">Race condition fix:</strong></p>
+        <div class="code-block"><span class="t">useEffect</span>(() => {
+            <span class="k">const</span> controller = <span class="k">new</span> <span class="t">AbortController</span>()
+
+            <span class="t">fetchSuggestions</span>(query, {
+            signal: controller.signal  <span class="c">// cancels previous request</span>
+            })
+
+            <span class="k">return</span> () => controller.<span class="t">abort</span>() <span class="c">// cleanup on next keystroke</span>
+            }, [query])</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin: 16px 0 8px;"><strong style="color:var(--text)">Headless component API:</strong></p>
+        <div class="code-block">&lt;<span class="t">Autocomplete</span>
+            query={query}
+            suggestions={suggestions}
+            isLoading={isLoading}
+            onQueryChange={(val) => <span class="t">setQuery</span>(val)}
+            onSelect={(item) => <span class="t">handleUserSelection</span>(item)}
+            renderItem={(item) => &lt;span&gt;{item.label}&lt;/span&gt;} <span class="c">// render prop</span>
+            /&gt;</div>
+    </div>
+
+    <!-- KEY CONCEPTS DAY 1 -->
+    <div class="card">
+        <div class="card-title"><span class="icon">📌</span> Key Concepts to Remember — Day 1</div>
+        <table>
+            <thead><tr><th>Concept</th><th>Definition</th></tr></thead>
+            <tbody>
+            <tr><td><strong>Race Condition</strong></td><td>When a slow API response from an earlier query overwrites a faster response from a later query</td></tr>
+            <tr><td><strong>AbortController</strong></td><td>Browser API to cancel pending fetch requests. Used to prevent race conditions</td></tr>
+            <tr><td><strong>Debounce</strong></td><td>Delays API call until user stops typing for X ms. Reduces unnecessary requests</td></tr>
+            <tr><td><strong>Headless Component</strong></td><td>Component that owns no logic — all state/behavior passed via props. Makes it reusable for any context</td></tr>
+            <tr><td><strong>Render Prop</strong></td><td>A prop that accepts a function returning JSX. Allows parent to control how items render</td></tr>
+            <tr><td><strong>ARIA combobox</strong></td><td>Role for accessible autocomplete inputs. Paired with listbox/option roles for screen readers</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ==================== DAY 2 ==================== -->
+    <div class="day-header">
+        <div class="day-num day2">Day 2</div>
+        <h2>State Management Decision Tree</h2>
+    </div>
+
+    <!-- THE REAL QUESTION -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🧠</span> The Real Question Interviewers Are Asking</div>
+        <div class="highlight red">❌ Wrong framing: "Which library should I use?"</div>
+        <div class="highlight green">✅ Right framing: "What kind of state is this, and where should it live?"</div>
+        <p style="font-size:14px; color:var(--text-muted); margin-top:12px;">Classify the state first. The library choice follows naturally from classification.</p>
+    </div>
+
+    <!-- 4 TYPES -->
+    <div class="card">
+        <div class="card-title"><span class="icon">📦</span> The 4 Types of State</div>
+        <div class="state-grid">
+            <div class="state-card local">
+                <div class="stag">LOCAL STATE</div>
+                <h4>Lives in one component</h4>
+                <p>Nobody else needs it. Goes away when component unmounts.</p>
+                <p><strong>Examples:</strong> dropdown open/closed, form input, modal visible</p>
+                <p style="color:var(--accent); font-size:12px; margin-top:8px;"><strong>Tool:</strong> useState / useReducer</p>
+            </div>
+            <div class="state-card server">
+                <div class="stag">SERVER STATE</div>
+                <h4>Comes from an API</h4>
+                <p>Needs fetching, caching, syncing, loading/error states.</p>
+                <p><strong>Examples:</strong> tweets list, product data, user profile</p>
+                <p style="color:var(--accent3); font-size:12px; margin-top:8px;"><strong>Tool:</strong> React Query / SWR</p>
+            </div>
+            <div class="state-card url">
+                <div class="stag">URL STATE</div>
+                <h4>Lives in the browser URL</h4>
+                <p>Survives page refresh. Shareable via link.</p>
+                <p><strong>Examples:</strong> search filters, pagination, active tab</p>
+                <p style="color:var(--accent4); font-size:12px; margin-top:8px;"><strong>Tool:</strong> URL params / query strings</p>
+            </div>
+            <div class="state-card global">
+                <div class="stag">GLOBAL STATE</div>
+                <h4>Multiple components need it</h4>
+                <p>Pure client state. Not from API. Shared across app.</p>
+                <p><strong>Examples:</strong> cart, theme, auth token</p>
+                <p style="color:var(--accent2); font-size:12px; margin-top:8px;"><strong>Tool:</strong> Zustand / Context API</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- DECISION TREE -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🌳</span> State Management Decision Tree</div>
+        <div class="tree"><span style="color:var(--accent4)">What kind of state is this?</span>
+            │
+            ├── Only one component needs it?
+            │   └── <span style="color:var(--accent)">useState / useReducer</span>        <span style="color:var(--text-muted)">(local)</span>
+            │
+            ├── Multiple components need it?
+            │   ├── Is it server data (from API)?
+            │   │   └── <span style="color:var(--accent3)">React Query / SWR</span>         <span style="color:var(--text-muted)">(server state)</span>
+            │   │
+            │   ├── Should it survive refresh / be shareable?
+            │   │   └── <span style="color:var(--accent4)">URL params</span>                  <span style="color:var(--text-muted)">(url state)</span>
+            │   │
+            │   └── Pure client state shared across app?
+            │       ├── Simple?  → <span style="color:var(--accent2)">Context API</span>
+            │       └── Complex? → <span style="color:var(--accent2)">Zustand / Jotai</span>
+            │
+            └── Real-time data (WebSockets / SSE)?
+            └── <span style="color:var(--accent)">CSR + WebSocket + useState</span></div>
+    </div>
+
+    <!-- TOOL BREAKDOWN -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🔧</span> Each Tool — When and Why</div>
+        <table>
+            <thead><tr><th>Tool</th><th>Use When</th><th>Avoid When</th></tr></thead>
+            <tbody>
+            <tr>
+                <td><strong>useState</strong></td>
+                <td>Single value, one component</td>
+                <td>Multiple related values updating together</td>
+            </tr>
+            <tr>
+                <td><strong>useReducer</strong></td>
+                <td>Multiple related values, complex transitions (e.g. checkout steps)</td>
+                <td>Simple single values</td>
+            </tr>
+            <tr>
+                <td><strong>React Query / SWR</strong></td>
+                <td>ANY data from an API</td>
+                <td>Pure client state (no API involved)</td>
+            </tr>
+            <tr>
+                <td><strong>URL Params</strong></td>
+                <td>Filters, pagination, tabs — anything shareable or refreshable</td>
+                <td>Sensitive flows (checkout, auth)</td>
+            </tr>
+            <tr>
+                <td><strong>Context API</strong></td>
+                <td>Simple global state, infrequent updates (theme, language)</td>
+                <td>Frequently changing state — causes re-renders</td>
+            </tr>
+            <tr>
+                <td><strong>Zustand</strong></td>
+                <td>Complex shared client state, frequent updates (cart)</td>
+                <td>Server data — use React Query instead</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight yellow">⚠️ Critical: User data (name, email) comes from an API — it's SERVER STATE → React Query. Not Zustand. Most candidates get this wrong.</div>
+    </div>
+
+    <!-- WEBSOCKET VS SSE -->
+    <div class="card">
+        <div class="card-title"><span class="icon">📡</span> WebSocket vs SSE vs Polling</div>
+        <div class="code-block"><span class="ok">WebSocket</span>   = Bidirectional. Client AND server send messages.
+            Best for: Chat, multiplayer games, collaborative editing.
+
+            <span class="ok">SSE</span>         = Server → Client only. One direction.
+            Best for: Live notifications, order tracking, stock prices.
+            Simpler than WebSocket, built for this use case.
+
+            <span class="ok">Polling</span>     = Client asks server every X seconds.
+            Best for: Simple updates where slight delay is fine.
+            Easiest to implement. Works everywhere.</div>
+
+        <div class="highlight">Order tracking updates every 5 seconds → SSE, not WebSocket. No bidirectional communication needed.</div>
+    </div>
+
+    <!-- PRACTICE EXAMPLES DAY 2 -->
+    <div class="practice-wrap">
+        <h3>🧪 All Practice Examples — Day 2</h3>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;"><strong style="color:var(--text)">Amazon E-commerce</strong></p>
+        <table>
+            <thead><tr><th>State</th><th>Type</th><th>Tool</th><th>Why</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>Mobile menu open/closed</td>
+                <td>Local</td>
+                <td><span class="tag-correct">useState</span></td>
+                <td>Only menu component needs it</td>
+            </tr>
+            <tr>
+                <td>Products from search API</td>
+                <td>Server</td>
+                <td><span class="tag-correct">SWR / React Query</span></td>
+                <td>Comes from API, needs caching and loading states</td>
+            </tr>
+            <tr>
+                <td>Applied filters (category, price)</td>
+                <td>URL</td>
+                <td><span class="tag-correct">URL params</span></td>
+                <td>Shareable link, survives refresh</td>
+            </tr>
+            <tr>
+                <td>Shopping cart</td>
+                <td>Global</td>
+                <td><span class="tag-correct">Zustand + persist</span></td>
+                <td>Multiple components, frequent updates, persists to localStorage</td>
+            </tr>
+            <tr>
+                <td>Logged-in user name/email</td>
+                <td>Server</td>
+                <td><span class="tag-correct">React Query</span></td>
+                <td>Comes from /api/me — server state, not global client state</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p style="font-size:13px; color:var(--text-muted); margin: 24px 0 16px;"><strong style="color:var(--text)">Swiggy / Zomato Food Delivery</strong></p>
+        <table>
+            <thead><tr><th>State</th><th>Type</th><th>Tool</th><th>Why</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>Live order tracking (driver location)</td>
+                <td>Real-time</td>
+                <td><span class="tag-correct">SSE + useState</span></td>
+                <td>One-directional server push. WebSocket is overkill here.</td>
+            </tr>
+            <tr>
+                <td>Restaurant menu</td>
+                <td>Server</td>
+                <td><span class="tag-correct">SWR / React Query</span></td>
+                <td>Comes from API, needs caching</td>
+            </tr>
+            <tr>
+                <td>Checkout step (Address → Payment → Confirm)</td>
+                <td>Local</td>
+                <td><span class="tag-correct">useReducer</span></td>
+                <td>Sensitive flow — don't put in URL. Multiple related values → useReducer.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight red">❌ Checkout steps in URL = users can navigate back mid-payment, share half-complete checkout. Always use local state for sensitive flows.</div>
+    </div>
+
+    <!-- THE MISTAKE 90% MAKE -->
+    <div class="card">
+        <div class="card-title"><span class="icon">⚠️</span> The Mistake 90% of Candidates Make</div>
+        <div class="code-block"><span class="no">❌ Wrong thinking:</span>
+            "I need to store search query  → put it in Redux"
+            "I need user data             → put it in Redux"
+            "I need API results           → put it in Redux"
+
+            <span class="ok">✅ Right thinking:</span>
+            "Search query   → only SearchBar needs it    → useState"
+            "User data      → comes from API             → React Query"
+            "API results    → server state               → React Query, not Redux"</div>
+        <div class="highlight">Redux / Zustand should only hold <strong>pure client state</strong> that multiple components truly share. API data belongs in React Query.</div>
+    </div>
+
+    <!-- CHEAT SHEET -->
+    <div class="card">
+        <div class="card-title"><span class="icon">🗂️</span> Complete State Management Cheat Sheet</div>
+        <div class="code-block"><span class="ok">State type        →  Right tool</span>
+            ─────────────────────────────────────────
+            Local UI          →  <span class="k">useState</span>
+            Complex local     →  <span class="k">useReducer</span>       <span class="c">(checkout steps, multi-value forms)</span>
+            Server data       →  <span class="k">React Query / SWR</span>
+            URL / shareable   →  <span class="k">URL params</span>
+            Global client     →  <span class="k">Zustand + persist</span>
+            Simple global     →  <span class="k">Context API</span>
+            Real-time 2-way   →  <span class="k">WebSocket + useState</span>
+            Real-time 1-way   →  <span class="k">SSE + useState</span>
+            Simple polling    →  <span class="k">setInterval + useState</span></div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- THE 6-STEP FRAMEWORK -->
+    <div class="framework-box" style="margin-top:0;">
+        <h3>📐 The 6-Step Framework — Use For Every Question</h3>
+        <div class="step-row">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h4>Clarify Requirements <span style="color:var(--text-muted); font-size:12px; font-weight:400;">(5 min)</span></h4>
+                <p>Who are users? What devices? What scale? What features? Any constraints?</p>
+            </div>
+        </div>
+        <div class="step-row">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h4>High-Level Architecture <span style="color:var(--text-muted); font-size:12px; font-weight:400;">(5 min)</span></h4>
+                <p>Rendering strategy? Component tree at a high level? How does data flow?</p>
+            </div>
+        </div>
+        <div class="step-row">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <h4>Component Breakdown <span style="color:var(--text-muted); font-size:12px; font-weight:400;">(10 min)</span></h4>
+                <p>Break UI into logical components. Define APIs. Identify reusable vs one-off.</p>
+            </div>
+        </div>
+        <div class="step-row">
+            <div class="step-num">4</div>
+            <div class="step-content">
+                <h4>Data & State Management <span style="color:var(--text-muted); font-size:12px; font-weight:400;">(10 min)</span></h4>
+                <p>Classify each state. Where does it live? How is it fetched, cached, invalidated?</p>
+            </div>
+        </div>
+        <div class="step-row">
+            <div class="step-num">5</div>
+            <div class="step-content">
+                <h4>Performance <span style="color:var(--text-muted); font-size:12px; font-weight:400;">(5 min)</span></h4>
+                <p>Code splitting, image optimization, caching, CDN, Core Web Vitals.</p>
+            </div>
+        </div>
+        <div class="step-row">
+            <div class="step-num">6</div>
+            <div class="step-content">
+                <h4>Accessibility & Reliability <span style="color:var(--text-muted); font-size:12px; font-weight:400;">(5 min)</span></h4>
+                <p>Keyboard nav, ARIA, error boundaries, offline support, fallback UI.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROGRESS SUMMARY -->
+    <div class="summary-box">
+        <h2>📈 Your Progress After Day 1 & Day 2</h2>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Rendering strategies (CSR / SSR / SSG / ISR)</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>3-question decision process before answering</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Splitting surfaces (Twitter feed vs public profile)</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Race conditions + AbortController fix</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Headless component pattern</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>4 types of state classification</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>React Query for ALL server/API data</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>URL state for shareable/refreshable UI</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>WebSocket vs SSE vs Polling</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>useReducer for sensitive complex flows</span></div>
+        <div class="progress-row"><span class="status-icon">⏳</span><span>Day 3 — Performance & Core Web Vitals (coming up)</span></div>
+    </div>
+
+</div>
+</body>
+</html>
