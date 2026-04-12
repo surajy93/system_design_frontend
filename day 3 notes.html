@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend System Design — Day 3 Notes</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+        :root {
+            --bg: #0a0f0a;
+            --bg2: #0f140f;
+            --bg3: #161e16;
+            --border: #2a3a2a;
+            --accent: #6aff9e;
+            --accent2: #ff6a6a;
+            --accent3: #6ab8ff;
+            --accent4: #ffd96a;
+            --text: #e8f0e8;
+            --text-muted: #7a997a;
+            --correct: #4ade80;
+            --wrong: #f87171;
+            --partial: #fbbf24;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #0a0f0a 0%, #0f180f 50%, #0a120a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 60px 40px 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px; right: -100px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(106,255,158,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(106,255,158,0.1);
+            border: 1px solid rgba(106,255,158,0.3);
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(28px, 5vw, 52px);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(90deg, var(--accent), var(--accent3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 16px;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
+
+        .week-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .week-chip .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 56px 0 28px;
+        }
+
+        .section-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #0a0f0a;
+            background: var(--accent);
+            padding: 6px 14px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .code-block {
+            background: #060f06;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 16px 0;
+            white-space: pre;
+        }
+
+        .code-block .c  { color: #3a5a3a; }
+        .code-block .k  { color: var(--accent); }
+        .code-block .s  { color: var(--accent3); }
+        .code-block .v  { color: var(--accent4); }
+        .code-block .t  { color: var(--accent2); }
+        .code-block .ok { color: var(--correct); }
+        .code-block .no { color: var(--wrong); }
+
+        .highlight {
+            border-left: 3px solid var(--accent);
+            background: rgba(106,255,158,0.05);
+            border-radius: 0 8px 8px 0;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #b0d8b0;
+            margin: 16px 0;
+        }
+
+        .highlight.red    { border-color: var(--accent2); background: rgba(255,106,106,0.05); color: #f0a8a8; }
+        .highlight.yellow { border-color: var(--accent4); background: rgba(255,217,106,0.05); color: #f0e0a8; }
+        .highlight.blue   { border-color: var(--accent3); background: rgba(106,184,255,0.05); color: #a8c8f0; }
+
+        /* LAYER CARDS */
+        .layers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 20px 0;
+        }
+
+        .layer-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .layer-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+
+        .l1 .layer-num { background: rgba(106,255,158,0.15); color: var(--accent); }
+        .l2 .layer-num { background: rgba(106,184,255,0.15); color: var(--accent3); }
+        .l3 .layer-num { background: rgba(255,217,106,0.15); color: var(--accent4); }
+        .l4 .layer-num { background: rgba(255,106,106,0.15); color: var(--accent2); }
+
+        .layer-card h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .layer-card .question {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .layer-card .fixes {
+            font-size: 12.5px;
+            line-height: 1.8;
+        }
+
+        .layer-card .fixes span {
+            display: block;
+            padding: 2px 0;
+        }
+
+        /* VITALS */
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .vital-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .vital-card .metric {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .vital-card .name {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .vital-card .target {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .vital-card p { font-size: 12px; color: var(--text-muted); }
+
+        .lcp .metric { color: var(--accent); }
+        .lcp .target { background: rgba(106,255,158,0.15); color: var(--accent); }
+        .inp .metric { color: var(--accent3); }
+        .inp .target { background: rgba(106,184,255,0.15); color: var(--accent3); }
+        .cls .metric { color: var(--accent4); }
+        .cls .target { background: rgba(255,217,106,0.15); color: var(--accent4); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            margin: 16px 0;
+        }
+
+        th {
+            background: var(--bg3);
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(42,58,42,0.5);
+            vertical-align: top;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .tag-correct { color: var(--correct); font-weight: 600; }
+        .tag-wrong   { color: var(--wrong); font-weight: 600; }
+        .tag-partial { color: var(--partial); font-weight: 600; }
+
+        .practice-wrap {
+            border: 1px solid rgba(106,255,158,0.2);
+            background: rgba(106,255,158,0.03);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .practice-wrap h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        hr.divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 40px 0;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #0f140f, #0a120a);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            margin-top: 48px;
+        }
+
+        .summary-box h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(42,58,42,0.4);
+            font-size: 14px;
+        }
+
+        .progress-row:last-child { border-bottom: none; }
+        .status-icon { font-size: 16px; width: 20px; }
+
+        /* ANSWER FORMAT BOX */
+        .answer-format {
+            background: linear-gradient(135deg, rgba(106,255,158,0.06), rgba(106,184,255,0.04));
+            border: 1px solid rgba(106,255,158,0.25);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+
+        .answer-format h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+
+        .answer-layer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+
+        .al1 { background: rgba(106,255,158,0.15); color: var(--accent); }
+        .al2 { background: rgba(106,184,255,0.15); color: var(--accent3); }
+        .al3 { background: rgba(255,217,106,0.15); color: var(--accent4); }
+        .al4 { background: rgba(255,106,106,0.15); color: var(--accent2); }
+
+        .answer-row p { font-size: 13.5px; padding-top: 4px; }
+
+        @media (max-width: 600px) {
+            .layers-grid, .vitals-grid { grid-template-columns: 1fr; }
+            .hero { padding: 40px 20px 36px; }
+            .container { padding: 0 16px 60px; }
+            .code-block { font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <div class="badge">Staff Frontend Engineer Prep</div>
+    <h1>Frontend System Design<br><span>Day 3 — Performance</span></h1>
+    <p>The complete performance mental model — 4 layers, Core Web Vitals, and all practice examples with corrections.</p>
+    <div class="week-chip">
+        <div class="dot"></div>
+        Week 1 · Day 3 — Performance Mental Model
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- WHY PERFORMANCE MATTERS -->
+    <div class="section-header">
+        <div class="section-tag">Day 3</div>
+        <h2>Performance Mental Model</h2>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🎯 Why This Is a Staff-Level Topic</div>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:12px;">
+            Performance shows you think about real users on slow networks and cheap devices — and the business impact behind it.
+        </p>
+        <div class="highlight yellow">
+            1 second delay in page load = 7% drop in conversions. Performance is a business metric, not just a technical one.
+        </div>
+    </div>
+
+    <!-- 4 LAYERS OVERVIEW -->
+    <div class="card">
+        <div class="card-title">🧱 The 4 Layers — Always Think In This Order</div>
+        <div class="layers-grid">
+            <div class="layer-card l1">
+                <div class="layer-num">Layer 1 — Network</div>
+                <h4>Are we sending too much?</h4>
+                <div class="question">Too much data? Too often? From too far away?</div>
+                <div class="fixes">
+                    <span>→ CDN (serve from edge)</span>
+                    <span>→ Code splitting</span>
+                    <span>→ Tree shaking</span>
+                    <span>→ HTTP/2</span>
+                    <span>→ WebP images</span>
+                </div>
+            </div>
+            <div class="layer-card l2">
+                <div class="layer-num">Layer 2 — Parse & Run</div>
+                <h4>Too much JS upfront?</h4>
+                <div class="question">Is the browser doing too much work before page is usable?</div>
+                <div class="fixes">
+                    <span>→ Lazy load heavy components</span>
+                    <span>→ Route-based code splitting</span>
+                    <span>→ Defer non-critical scripts</span>
+                    <span>→ async/defer on 3rd party</span>
+                </div>
+            </div>
+            <div class="layer-card l3">
+                <div class="layer-num">Layer 3 — Render</div>
+                <h4>Is painting efficient?</h4>
+                <div class="question">Is the browser doing expensive layout/paint work?</div>
+                <div class="fixes">
+                    <span>→ Virtualize long lists</span>
+                    <span>→ CSS transforms not position</span>
+                    <span>→ Avoid layout thrash</span>
+                    <span>→ will-change for animations</span>
+                </div>
+            </div>
+            <div class="layer-card l4">
+                <div class="layer-num">Layer 4 — Perceived</div>
+                <h4>Does it FEEL fast?</h4>
+                <div class="question">Users measure frustration, not milliseconds.</div>
+                <div class="fixes">
+                    <span>→ Skeleton screens</span>
+                    <span>→ Optimistic updates</span>
+                    <span>→ Progressive loading</span>
+                    <span>→ Prefetch on hover</span>
+                </div>
+            </div>
+        </div>
+        <div class="highlight red">⚠️ Parse & Run is about JS bundle cost. NOT about SSR/CSR. That's the most common confusion.</div>
+    </div>
+
+    <!-- LAYER 1 DEEP DIVE -->
+    <div class="card">
+        <div class="card-title">🌐 Layer 1 — Network (Deep Dive)</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text)">Code Splitting:</strong></p>
+        <div class="code-block"><span class="no">❌ Everything loads upfront — huge bundle</span>
+            <span class="k">import</span> HeavyChartComponent <span class="k">from</span> <span class="s">'./HeavyChart'</span>
+
+            <span class="ok">✅ Only loads when needed</span>
+            <span class="k">const</span> HeavyChart = React.<span class="t">lazy</span>(() => <span class="k">import</span>(<span class="s">'./HeavyChart'</span>))</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text)">Tree Shaking:</strong></p>
+        <div class="code-block"><span class="no">❌ Imports entire lodash (70kb)</span>
+            <span class="k">import</span> _ <span class="k">from</span> <span class="s">'lodash'</span>
+
+            <span class="ok">✅ Only imports what you use (2kb)</span>
+            <span class="k">import</span> debounce <span class="k">from</span> <span class="s">'lodash/debounce'</span></div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text)">CDN Impact:</strong></p>
+        <div class="code-block">Without CDN: User in Mumbai → hits server in US     → <span class="no">200ms</span>
+            With CDN:    User in Mumbai → hits edge in Mumbai  → <span class="ok">10ms</span></div>
+    </div>
+
+    <!-- LAYER 2 DEEP DIVE -->
+    <div class="card">
+        <div class="card-title">⚙️ Layer 2 — Parse & Run (Deep Dive)</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text)">Route-based code splitting:</strong></p>
+        <div class="code-block"><span class="c">// Only load each page's JS when user navigates there</span>
+            <span class="k">const</span> HomePage     = React.<span class="t">lazy</span>(() => <span class="k">import</span>(<span class="s">'./pages/Home'</span>))
+            <span class="k">const</span> ProductPage  = React.<span class="t">lazy</span>(() => <span class="k">import</span>(<span class="s">'./pages/Product'</span>))
+            <span class="k">const</span> CheckoutPage = React.<span class="t">lazy</span>(() => <span class="k">import</span>(<span class="s">'./pages/Checkout'</span>))</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text)">Defer non-critical scripts:</strong></p>
+        <div class="code-block"><span class="no">❌ Blocks HTML parsing</span>
+            &lt;script src=<span class="s">"analytics.js"</span>&gt;&lt;/script&gt;
+
+            <span class="ok">✅ Loads after HTML is parsed</span>
+            &lt;script src=<span class="s">"analytics.js"</span> <span class="k">defer</span>&gt;&lt;/script&gt;</div>
+
+        <div class="highlight blue">💡 Third party scripts (analytics, chat, ads) should always be deferred or async. They're not critical to first render.</div>
+    </div>
+
+    <!-- LAYER 3 DEEP DIVE -->
+    <div class="card">
+        <div class="card-title">🎨 Layer 3 — Render (Deep Dive)</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text)">Virtualization:</strong></p>
+        <div class="code-block"><span class="no">❌ Rendering 10,000 items in DOM</span>
+            → browser creates 10,000 DOM nodes
+            → massive memory, slow scroll
+
+            <span class="ok">✅ react-window / react-virtual</span>
+            → only renders ~10-15 visible items
+            → recycles DOM nodes on scroll
+            → feels instant even with millions of items</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text)">CSS transforms over position:</strong></p>
+        <div class="code-block"><span class="no">❌ Triggers layout + paint (expensive)</span>
+            .moving { left: <span class="v">100px</span>; top: <span class="v">50px</span>; }
+
+            <span class="ok">✅ Only triggers composite (GPU, cheap)</span>
+            .moving { transform: <span class="t">translate</span>(<span class="v">100px</span>, <span class="v">50px</span>); }</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text)">Avoid layout thrash:</strong></p>
+        <div class="code-block"><span class="no">❌ Read + write mixed — triggers recalc every iteration</span>
+            elements.<span class="t">forEach</span>(el => {
+            el.style.width = container.offsetWidth + <span class="s">'px'</span>
+            })
+
+            <span class="ok">✅ Batch reads then writes</span>
+            <span class="k">const</span> width = container.offsetWidth <span class="c">// read once</span>
+            elements.<span class="t">forEach</span>(el => {
+            el.style.width = width + <span class="s">'px'</span>      <span class="c">// write only</span>
+            })</div>
+    </div>
+
+    <!-- LAYER 4 DEEP DIVE -->
+    <div class="card">
+        <div class="card-title">✨ Layer 4 — Perceived Performance (Deep Dive)</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;"><strong style="color:var(--text)">Optimistic Updates (most important):</strong></p>
+        <div class="code-block"><span class="no">❌ Wait for API — user feels 300ms delay</span>
+            <span class="k">await</span> <span class="t">likePost</span>(postId)
+            <span class="t">setLiked</span>(<span class="v">true</span>)
+
+            <span class="ok">✅ Update UI first — feels instant</span>
+            <span class="t">setLiked</span>(<span class="v">true</span>)              <span class="c">// immediate feedback</span>
+            <span class="k">await</span> <span class="t">likePost</span>(postId)
+            .<span class="t">catch</span>(() => {
+            <span class="t">setLiked</span>(<span class="v">false</span>)          <span class="c">// rollback if API fails</span>
+            <span class="t">showError</span>()
+            })</div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin: 16px 0 8px;"><strong style="color:var(--text)">Skeleton screens vs blank loading:</strong></p>
+        <div class="code-block"><span class="no">❌ Blank white page → user thinks it's broken</span>
+
+            <span class="ok">✅ Skeleton UI → user sees structure, feels progress</span>
+            Shows layout immediately, content fills in as it loads</div>
+
+        <div class="highlight">Perceived performance is the most underrated layer. Users don't measure milliseconds — they measure frustration. A skeleton screen on a 500ms load feels faster than a blank screen on a 300ms load.</div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- CORE WEB VITALS -->
+    <div class="section-header">
+        <div class="section-tag">Vitals</div>
+        <h2>Core Web Vitals</h2>
+    </div>
+
+    <div class="card">
+        <div class="card-title">📊 The 3 Metrics That Matter</div>
+        <div class="vitals-grid">
+            <div class="vital-card lcp">
+                <div class="metric">LCP</div>
+                <div class="name">Largest Contentful Paint</div>
+                <div class="target">&lt; 2.5 seconds</div>
+                <p>How long until main content is visible on screen</p>
+            </div>
+            <div class="vital-card inp">
+                <div class="metric">INP</div>
+                <div class="name">Interaction to Next Paint</div>
+                <div class="target">&lt; 200ms</div>
+                <p>How fast page responds to user clicks and input</p>
+            </div>
+            <div class="vital-card cls">
+                <div class="metric">CLS</div>
+                <div class="name">Cumulative Layout Shift</div>
+                <div class="target">&lt; 0.1</div>
+                <p>Does the page jump around while loading</p>
+            </div>
+        </div>
+
+        <table>
+            <thead><tr><th>Metric</th><th>Main Causes</th><th>Fixes</th></tr></thead>
+            <tbody>
+            <tr>
+                <td><strong>LCP</strong></td>
+                <td>Slow server, render-blocking JS, large hero image</td>
+                <td>SSR/SSG, CDN, preload hero image, WebP format</td>
+            </tr>
+            <tr>
+                <td><strong>INP</strong></td>
+                <td>Too much JS on main thread, heavy event handlers</td>
+                <td>Code split, reduce JS, web workers for heavy tasks</td>
+            </tr>
+            <tr>
+                <td><strong>CLS</strong></td>
+                <td>Images/ads without dimensions, late-injected content</td>
+                <td>Always set width + height on images and ad slots</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- IMAGE OPTIMIZATION -->
+    <div class="card">
+        <div class="card-title">🖼️ Image Optimization — High Impact, Easy Wins</div>
+        <div class="code-block"><span class="no">❌ Basic image — no optimization</span>
+            &lt;img src=<span class="s">"hero.jpg"</span> /&gt;   <span class="c">// 2MB PNG, any size, blocks CLS</span>
+
+            <span class="ok">✅ Fully optimized image</span>
+            &lt;img
+            src=<span class="s">"hero.webp"</span>                    <span class="c">// WebP = 30% smaller than JPG</span>
+            srcset=<span class="s">"hero-400.webp 400w,
+          hero-800.webp 800w"</span>        <span class="c">// right size per screen</span>
+            loading=<span class="s">"lazy"</span>                   <span class="c">// don't load until near viewport</span>
+            width=<span class="s">"800"</span> height=<span class="s">"600"</span>         <span class="c">// prevents CLS layout shift</span>
+            /&gt;</span></div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">4 fixes in one image tag: <strong style="color:var(--text)">WebP + srcset + lazy loading + dimensions</strong></p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- PRACTICE EXAMPLES -->
+    <div class="section-header">
+        <div class="section-tag">Practice</div>
+        <h2>All Practice Examples</h2>
+    </div>
+
+    <!-- TWITTER FEED -->
+    <div class="practice-wrap">
+        <h3>🧪 Twitter-like Feed — 10,000 tweets with images</h3>
+        <table>
+            <thead><tr><th>Question</th><th>Your Answer</th><th>Correct Answer</th><th>Verdict</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>10,000 tweets in feed</td>
+                <td>react-window, visible only</td>
+                <td>Virtualize with react-window — only render ~15 visible items, recycle on scroll</td>
+                <td><span class="tag-correct">✅</span></td>
+            </tr>
+            <tr>
+                <td>Like button instant feel</td>
+                <td>FID/INP metric</td>
+                <td>Optimistic update — flip liked state immediately, sync to API in background, rollback on failure</td>
+                <td><span class="tag-wrong">❌ Wrong layer</span></td>
+            </tr>
+            <tr>
+                <td>Image fixes (3)</td>
+                <td>CDN + width/height</td>
+                <td>WebP format + lazy loading + CDN + width/height (that's 4 fixes)</td>
+                <td><span class="tag-partial">⚠️ Missing lazy + WebP</span></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- NETFLIX -->
+    <div class="practice-wrap">
+        <h3>🧪 Netflix Movie Browsing Page — Hero + 500 thumbnails</h3>
+        <div class="answer-format">
+            <h3>Complete 4-Layer Answer</h3>
+            <div class="answer-row">
+                <div class="answer-layer al1">Network</div>
+                <p>Serve all images from CDN. Convert thumbnails to WebP. Set explicit dimensions to prevent CLS on hero banner.</p>
+            </div>
+            <div class="answer-row">
+                <div class="answer-layer al2">Parse & Run</div>
+                <p>Lazy load the video player and movie detail modal — they're heavy and only needed when user clicks a title.</p>
+            </div>
+            <div class="answer-row">
+                <div class="answer-layer al3">Render</div>
+                <p>Virtualize horizontal movie rows with react-window. 500+ thumbnails shouldn't all live in the DOM.</p>
+            </div>
+            <div class="answer-row">
+                <div class="answer-layer al4">Perceived</div>
+                <p>Show skeleton cards while thumbnails load. Blur-up placeholder for hero banner image.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- GOOGLE MAPS -->
+    <div class="practice-wrap">
+        <h3>🧪 Google Maps Frontend — Markers, search, routes, traffic</h3>
+        <div class="answer-format">
+            <h3>Complete 4-Layer Answer</h3>
+            <div class="answer-row">
+                <div class="answer-layer al1">Network</div>
+                <p>Serve map tiles from geographically close CDN nodes. Cache tiles aggressively — they rarely change.</p>
+            </div>
+            <div class="answer-row">
+                <div class="answer-layer al2">Parse & Run</div>
+                <p>Lazy load Street View, route calculator panel, and satellite mode — most users never use them on first load.</p>
+            </div>
+            <div class="answer-row">
+                <div class="answer-layer al3">Render</div>
+                <p>Only render markers visible in current viewport. As user pans, load new markers and discard off-screen ones. Same concept as react-window but for map coordinates.</p>
+            </div>
+            <div class="answer-row">
+                <div class="answer-layer al4">Perceived</div>
+                <p>Show skeleton for search results instantly. Draw optimistic route line immediately while exact calculation completes in background.</p>
+            </div>
+        </div>
+
+        <div class="highlight yellow">⚠️ Common mistake on Maps: Saying "SSR/CSR" for Parse & Run. That's rendering strategy (Day 1). Parse & Run = JS bundle cost only.</div>
+    </div>
+
+    <!-- CHEAT SHEET -->
+    <div class="card">
+        <div class="card-title">🗂️ Performance Cheat Sheet</div>
+        <div class="code-block"><span class="ok">Layer 1 — Network</span>
+            CDN for all assets         → serve from edge, near the user
+            WebP format                → 30% smaller than JPG
+            Code splitting             → React.lazy() + dynamic import
+            Tree shaking               → import { x } not import *
+            HTTP/2                     → parallel requests
+
+            <span class="ok">Layer 2 — Parse & Run</span>
+            Route-based splitting      → lazy load each page separately
+            Defer 3rd party scripts    → &lt;script defer&gt;
+            Lazy load heavy components → player, modal, map, editor
+
+            <span class="ok">Layer 3 — Render</span>
+            Virtualize long lists      → react-window / react-virtual
+            CSS transforms             → transform: translate() not left/top
+            Batch DOM reads/writes     → avoid layout thrash
+            will-change: transform     → hint browser to use GPU layer
+
+            <span class="ok">Layer 4 — Perceived</span>
+            Skeleton screens           → show structure before data
+            Optimistic updates         → update UI first, sync after
+            Progressive loading        → blur-up images, partial content
+            Prefetch on hover          → preload next page before click</div>
+    </div>
+
+    <!-- STRONG INTERVIEW ANSWER -->
+    <div class="card">
+        <div class="card-title">💬 What a Staff-Level Performance Answer Sounds Like</div>
+        <div class="highlight">
+            "I think about performance in 4 layers. First network — am I sending too much? I'd code-split by route and use WebP images from a CDN. Second, parse cost — defer non-critical scripts and lazy-load heavy components like the video player. Third, render — virtualize any list over 100 items and use CSS transforms for animations to stay on the GPU. Fourth and most underrated — perceived performance. Skeleton screens and optimistic updates make an app feel instant even when the network is slow."
+        </div>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:12px;">That answer covers all 4 layers with concrete examples. Sounds senior immediately. ✅</p>
+    </div>
+
+    <!-- THE HABIT -->
+    <div class="card" style="border-color: rgba(106,255,158,0.3);">
+        <div class="card-title">🎯 The One Habit to Lock In</div>
+        <p style="font-size:14px; margin-bottom:16px;">Every performance answer — lead with the layer name first:</p>
+        <div class="code-block"><span class="ok">"For network I'd..."</span>
+            <span class="ok">"For parse cost I'd..."</span>
+            <span class="ok">"For rendering I'd..."</span>
+            <span class="ok">"For perceived performance I'd..."</span></div>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:12px;">This structure alone sounds more senior than 90% of candidates — even before you get to the content.</p>
+    </div>
+
+    <!-- PROGRESS SUMMARY -->
+    <div class="summary-box">
+        <h2>📈 Your Progress — Day 1, 2 & 3</h2>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Rendering strategies (CSR / SSR / SSG / ISR)</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>3-question decision process for rendering</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Race conditions + AbortController</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Headless component pattern</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>4 types of state + decision tree</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>React Query for all server/API data</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>URL state for shareable UI</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>WebSocket vs SSE vs Polling</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>4-layer performance mental model</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Core Web Vitals (LCP, INP, CLS)</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Optimistic updates with rollback</span></div>
+        <div class="progress-row"><span class="status-icon">✅</span><span>Virtualization for long lists</span></div>
+        <div class="progress-row"><span class="status-icon">⚠️</span><span>Layer separation in answers — still mixing sometimes (keep practicing)</span></div>
+        <div class="progress-row"><span class="status-icon">⏳</span><span>Day 4 — Component Design & Design Systems (coming up)</span></div>
+    </div>
+
+</div>
+</body>
+</html>
