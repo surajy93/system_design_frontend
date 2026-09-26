@@ -1,34 +1,81 @@
-# Frontend System Design Notes
+# Frontend System Design
 
-A collection of frontend interview preparation material and design examples. This is a static learning/reference repository, not a deployed application or a tested component library.
+This repository contains frontend artifacts and notes for system design exercises and small demo pages.
 
-## What is here
+Status: initial stub — contains static HTML pages and supporting notes.
 
-- [`Interview Question/frontend_interview_2026_complete_qa.md`](<Interview%20Question/frontend_interview_2026_complete_qa.md>) — 40 questions covering JavaScript, TypeScript, CSS, React, Angular, performance, system design, AI and developer tools, web APIs, and accessibility.
-- [`theory/1-2-days.html`](theory/1-2-days.html) — notes on rendering strategies, frontend design approaches, and state management.
-- [`theory/day 3 notes.html`](theory/day%203%20notes.html) — performance notes, Core Web Vitals, and worked interface-design examples.
-- [`design/design_short_url.png`](design/design_short_url.png) — short URL design visual.
-- [`design/design_youtube.png`](design/design_youtube.png) — YouTube-style interface design visual.
-- [`design/google_image_search_interface.png`](design/google_image_search_interface.png) — image-search interface design visual.
+## Contents
 
-The notes and visuals are study artifacts. They are not evidence of a deployed system or measured production performance.
+- `1-2-days.html` — a static HTML page included in the workspace (example/system-design notes).
+- `README.md` — this file.
 
-## View locally
+(As the project grows, we'll add folders for prototypes, diagrams, components, and experiments.)
 
-No build tool or package installation is required. From the repository root, run:
+## Goals
+
+- Keep a lightweight working repo for frontend system design experiments.
+- Collect small runnable examples (static pages, interactive demos).
+- Document architecture notes, trade-offs, and system diagrams.
+
+## Getting started
+
+You can open the static HTML files directly in a browser or serve them over a local HTTP server (recommended for testing relative assets).
+
+Prerequisites
+- A modern browser (Chrome, Firefox, Safari)
+- (Optional) Node.js/npm if you want to install a static server like `http-server` or `serve`.
+
+Open directly
+- In your file manager or editor, open `1-2-days.html`.
+
+Serve locally (recommended)
+- Using Python 3 (macOS):
 
 ```bash
+cd /Users/surajy/WebstormProjects/system_design_frontend
 python3 -m http.server 8000
+# then open http://localhost:8000/1-2-days.html
 ```
 
-Then open:
+- Or using npm `http-server`:
 
-- [Day 1 and 2 notes](http://localhost:8000/theory/1-2-days.html)
-- [Day 3 performance notes](http://localhost:8000/theory/day%203%20notes.html)
-- [Interview questions](http://localhost:8000/Interview%20Question/frontend_interview_2026_complete_qa.md)
+```bash
+cd /Users/surajy/WebstormProjects/system_design_frontend
+npm install --global http-server
+http-server -p 8000
+# then open http://localhost:8000/1-2-days.html
+```
 
-The PNG files can be opened directly in a browser or viewed through GitHub.
+## Suggested repository structure
 
-## Scope and next step
+As this repo grows, consider organizing like:
 
-The material is for interview preparation and design practice. A useful next step is to turn one design topic into a complete case study with explicit requirements, constraints, alternatives, diagrams, and a clearly separated implementation or prototype.
+```
+/ (repo root)
+  README.md
+  /examples      # runnable demo pages and micro-apps
+  /notes         # markdown notes and architecture docs
+  /diagrams      # images, diagrams (draw.io, svg)
+  /components    # reusable UI components (if you add a build tool)
+```
+
+## Contributing
+
+- Add small, self-contained examples.
+- Include a short README per example explaining what the page/demo demonstrates and any run steps.
+- Prefer simple, dependency-free demos (vanilla JS/HTML/CSS) or include a `package.json` if you add toolchain/deps.
+
+## Next steps (ideas)
+
+- Add a `package.json` and simple dev script (e.g., `npm run start`) to standardize serving examples.
+- Add a `CONTRIBUTING.md` and issue/PR templates.
+- Add a few system-design case studies: caching, load balancing, client-side state management, offline-first strategies.
+
+## License
+
+This repository is provided under the MIT license — add a `LICENSE` file if you want an explicit copy.
+
+## Contact
+
+If you'd like me to expand this README (add scripts, tests, or a sample `package.json`), tell me what you want and I will add it.
+
